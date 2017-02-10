@@ -29,8 +29,8 @@
         <div id='header'>
             <div class="swagger-ui-wrap">
                 <a id="logo" href="http://swagger.io"><img class="logo__img" alt="swagger" height="40" width="40" src="18-honey-badger-teeth-w710-h47.jpg" /><span class="logo__title">swagger badger</span></a>
-                <form id='file_uploader' action="http://swagger-ripper.cfapps.io/api/">
-                    <div class='input'><input type="file" name="file"></input>
+                <form id='file_uploader'>
+                    <div class='input'><input type="file" name="file" id="fileUploadControl" accept=".jar"></input>
                     </div>
                     <div class='input'><a id="uploadFile" class="header__btn" href="#" data-sw-translate>Upload</a></div>
                 </form>
@@ -68,7 +68,54 @@
         reloadList();
     </script>
     <script type="text/javascript">
-        $('#uploadFile')
+        $('#uploadFile').click(function() {
+
+            var ext = $('#fileUploadControl').val().split('.').pop().toLowerCase();
+            if($.inArray(ext, ['jar']) == -1) {
+                alert("You're not funny, go away. Come back with a proper jar :)");
+                var control = $('#fileUploadControl');
+                control.replaceWith( control = control.clone( true ) );
+                return;
+            }
+
+            $.ajax({
+                // Your server script to process the upload
+                url: 'http://swagger-ripper.cfapps.io/api/',
+                type: 'POST',
+
+                // Form data
+                data: new FormData($('#file_uploader')[0]),
+
+                // Tell jQuery not to process data or worry about content-type
+                // You *must* include these options!
+                cache: false,
+                contentType: false,
+                processData: false,
+
+                // Custom XMLHttpRequest
+                xhr: function() {
+                    var myXhr = $.ajaxSettings.xhr();
+                    if (myXhr.upload) {
+                        // For handling the progress of the upload
+                        myXhr.upload.addEventListener('progress', function(e) {
+                            if (e.lengthComputable) {
+                                $('progress').attr({
+                                    value: e.loaded,
+                                    max: e.total,
+                                });
+                            }
+                        }, false);
+                    }
+                    return myXhr;
+                },
+
+                success: function() {
+                    reloadList();
+                    var control = $('#fileUploadControl');
+                    control.replaceWith( control = control.clone( true ) );
+                }
+            });
+        });
     </script>
 </body>
 
